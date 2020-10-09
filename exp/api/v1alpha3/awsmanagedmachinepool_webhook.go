@@ -49,31 +49,6 @@ func (r *AWSManagedMachinePool) SetupWebhookWithManager(mgr ctrl.Manager) error 
 var _ webhook.Defaulter = &AWSManagedMachinePool{}
 var _ webhook.Validator = &AWSManagedMachinePool{}
 
-func (r *AWSManagedMachinePool) validateScaling() field.ErrorList {
-	var allErrs field.ErrorList
-	if r.Spec.Scaling != nil { // nolint:nestif
-		minField := field.NewPath("spec", "scaling", "minSize")
-		maxField := field.NewPath("spec", "scaling", "maxSize")
-		min := r.Spec.Scaling.MinSize
-		max := r.Spec.Scaling.MaxSize
-		if min != nil {
-			if *min < 0 {
-				allErrs = append(allErrs, field.Invalid(minField, *min, "must be greater than zero"))
-			}
-			if max != nil && *max < *min {
-				allErrs = append(allErrs, field.Invalid(maxField, *max, fmt.Sprintf("must be greater than field %s", minField.String())))
-			}
-		}
-		if max != nil && *max < 0 {
-			allErrs = append(allErrs, field.Invalid(maxField, *max, "must be greater than zero"))
-		}
-	}
-	if len(allErrs) == 0 {
-		return nil
-	}
-	return allErrs
-}
-
 // ValidateCreate will do any extra validation when creating a AWSManagedMachinePool
 func (r *AWSManagedMachinePool) ValidateCreate() error {
 	mmpLog.Info("AWSManagedMachinePool validate create", "name", r.Name)
@@ -84,6 +59,9 @@ func (r *AWSManagedMachinePool) ValidateCreate() error {
 		allErrs = append(allErrs, field.Required(field.NewPath("spec.eksNodegroupName"), "eksNodegroupName is required"))
 	}
 	if errs := r.validateScaling(); errs != nil || len(errs) == 0 {
+		allErrs = append(allErrs, errs...)
+	}
+	if errs := r.validateRemoteAccess(); errs != nil || len(errs) == 0 {
 		allErrs = append(allErrs, errs...)
 	}
 
@@ -160,6 +138,49 @@ func (r *AWSManagedMachinePool) validateImmutable(old *AWSManagedMachinePool) fi
 	appendErrorIfMutated(old.Spec.AMIType, r.Spec.AMIType, "amiType")
 	appendErrorIfMutated(old.Spec.RemoteAccess, r.Spec.RemoteAccess, "remoteAccess")
 
+	return allErrs
+}
+
+func (r *AWSManagedMachinePool) validateScaling() field.ErrorList {
+	var allErrs field.ErrorList
+	if r.Spec.Scaling != nil { // nolint:nestif
+		minField := field.NewPath("spec", "scaling", "minSize")
+		maxField := field.NewPath("spec", "scaling", "maxSize")
+		min := r.Spec.Scaling.MinSize
+		max := r.Spec.Scaling.MaxSize
+		if min != nil {
+			if *min < 0 {
+				allErrs = append(allErrs, field.Invalid(minField, *min, "must be greater than zero"))
+			}
+			if max != nil && *max < *min {
+				allErrs = append(allErrs, field.Invalid(maxField, *max, fmt.Sprintf("must be greater than field %s", minField.String())))
+			}
+		}
+		if max != nil && *max < 0 {
+			allErrs = append(allErrs, field.Invalid(maxField, *max, "must be greater than zero"))
+		}
+	}
+	if len(allErrs) == 0 {
+		return nil
+	}
+	return allErrs
+}
+
+func (r *AWSManagedMachinePool) validateRemoteAccess() field.ErrorList {
+	var allErrs field.ErrorList
+	remoteAccess := r.Spec.RemoteAccess
+	if remoteAccess != nil {
+		sSGsField := field.NewPath("spec", "remoteAccess", "sourceSecurityGroups")
+		publicAccessField := field.NewPath("spec", "remoteAccess", "publicAccess")
+		sSGs := remoteAccess.SourceSecurityGroups
+		publicAccess := remoteAccess.PublicAccess
+		if len(sSGs) > 0 && *publicAccess == true {
+			allErrs = append(allErrs, field.Invalid(sSGsField, sSGs, fmt.Sprintf("cannot be set while %s is true", publicAccessField.String())))
+		}
+	}
+	if len(allErrs) == 0 {
+		return nil
+	}
 	return allErrs
 }
 

@@ -109,13 +109,22 @@ func ngTags(key string, additionalTags infrav1.Tags) map[string]string {
 }
 
 func (s *NodegroupService) remoteAccess() (*eks.RemoteAccessConfig, error) {
-	pool := s.scope.ManagedMachinePool.Spec
-	if pool.RemoteAccess == nil {
+	remoteAccess := s.scope.ManagedMachinePool.Spec.RemoteAccess
+	if remoteAccess == nil {
 		return nil, nil
 	}
 
 	controlPlane := s.scope.ControlPlane
-	sSGs := pool.RemoteAccess.SourceSecurityGroups
+	sSGs := remoteAccess.SourceSecurityGroups
+
+	if len(sSGs) == 0 && !*remoteAccess.PublicAccess {
+		// Go around the API and add a limited SG
+		nodeSG, ok := controlPlane.Status.Network.SecurityGroups[infrav1.SecurityGroupNode]
+		if !ok {
+			return nil, errors.Errorf("%s security group not found on control plane", infrav1.SecurityGroupNode)
+		}
+		sSGs = append(sSGs, nodeSG.ID)
+	}
 
 	if controlPlane.Spec.Bastion.Enabled {
 		additionalSG, ok := controlPlane.Status.Network.SecurityGroups[infrav1.SecurityGroupEKSNodeAdditional]
@@ -128,7 +137,7 @@ func (s *NodegroupService) remoteAccess() (*eks.RemoteAccessConfig, error) {
 		)
 	}
 
-	sshKeyName := pool.RemoteAccess.SSHKeyName
+	sshKeyName := remoteAccess.SSHKeyName
 	if sshKeyName == nil {
 		sshKeyName = controlPlane.Spec.SSHKeyName
 	}

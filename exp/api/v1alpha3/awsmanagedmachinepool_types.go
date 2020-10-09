@@ -128,9 +128,13 @@ type ManagedRemoteAccess struct {
 	// If left empty, the key from the control plane is used.
 	SSHKeyName *string `json:"sshKeyName,omitempty"`
 
-	// SourceSecurityGroups specifies which security groups are allowed access
-	// An empty array opens port 22 to the public internet
+	// SourceSecurityGroups specifies which security groups are allowed access.
 	SourceSecurityGroups []string `json:"sourceSecurityGroups,omitempty"`
+
+	// PublicAccess allows access to port 22 from the public internet.
+	// SourceSecurityGroups is incompatible with this option.
+	// +kubebuilder:default=false
+	PublicAccess *bool `json:"publicAccess,omitempty"`
 }
 
 // AWSManagedMachinePoolStatus defines the observed state of AWSManagedMachinePool
