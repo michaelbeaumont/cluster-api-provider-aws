@@ -169,6 +169,15 @@ func (s *NodegroupService) createNodegroup() (*eks.Nodegroup, error) {
 		Tags:          aws.StringMap(tags),
 		RemoteAccess:  remoteAccess,
 	}
+	if managedPool.LaunchTemplate != nil {
+		if s.scope.ManagedMachinePool.Status.LaunchTemplateID != "" {
+			input.LaunchTemplate = &eks.LaunchTemplateSpecification{
+				Id: aws.String(s.scope.ManagedMachinePool.Status.LaunchTemplateID),
+			}
+		} else {
+			return nil, errors.New("waiting on launch template creation")
+		}
+	}
 	if managedPool.AMIType != nil {
 		input.AmiType = aws.String(string(*managedPool.AMIType))
 	}

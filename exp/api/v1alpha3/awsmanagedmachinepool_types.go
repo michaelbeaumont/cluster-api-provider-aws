@@ -89,6 +89,10 @@ type AWSManagedMachinePoolSpec struct {
 	// +optional
 	AMIType *ManagedMachineAMIType `json:"amiType,omitempty"`
 
+	// LaunchTemplate specifies the launch template to use for launching
+	// instances.
+	LaunchTemplate *AWSLaunchTemplate `json:"launchTemplate,omitempty"`
+
 	// Labels specifies labels for the Kubernetes node objects
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
@@ -185,6 +189,9 @@ type AWSManagedMachinePoolStatus struct {
 	// Conditions defines current service state of the managed machine pool
 	// +optional
 	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
+
+	// The ID of the launch template, if one is specified
+	LaunchTemplateID string `json:"launchTemplateID,omitempty"`
 }
 
 // +kubebuilder:object:root=true

@@ -385,30 +385,6 @@ func (s *Service) GetCoreSecurityGroups(scope *scope.MachineScope) ([]string, er
 	return ids, nil
 }
 
-// GetCoreSecurityGroups looks up the security group IDs managed by this actuator
-// They are considered "core" to its proper functioning
-func (s *Service) GetCoreNodeSecurityGroups(scope *scope.MachinePoolScope) ([]string, error) {
-	// These are common across both controlplane and node machines
-	sgRoles := []infrav1.SecurityGroupRole{
-		infrav1.SecurityGroupNode,
-	}
-
-	if !scope.IsEKSManaged() {
-		sgRoles = append(sgRoles, infrav1.SecurityGroupLB)
-	}
-
-	ids := make([]string, 0, len(sgRoles))
-	for _, sg := range sgRoles {
-		if _, ok := s.scope.SecurityGroups()[sg]; !ok {
-			return nil, awserrors.NewFailedDependency(
-				fmt.Sprintf("%s security group not available", sg),
-			)
-		}
-		ids = append(ids, s.scope.SecurityGroups()[sg].ID)
-	}
-	return ids, nil
-}
-
 // TerminateInstance terminates an EC2 instance.
 // Returns nil on success, error in all other cases.
 func (s *Service) TerminateInstance(instanceID string) error {

@@ -380,13 +380,12 @@ func (r *AWSMachinePoolReconciler) findASG(machinePoolScope *scope.MachinePoolSc
 }
 
 func (r *AWSMachinePoolReconciler) reconcileLaunchTemplate(machinePoolScope *scope.MachinePoolScope, ec2Scope scope.EC2Scope) error {
+	ec2svc := r.getEC2Service(ec2Scope)
+	asgSvc := r.getASGService(ec2Scope)
 	userData, err := machinePoolScope.GetRawBootstrapData()
 	if err != nil {
 		r.Recorder.Eventf(machinePoolScope.AWSMachinePool, corev1.EventTypeWarning, "FailedGetBootstrapData", err.Error())
 	}
-
-	ec2svc := r.getEC2Service(ec2Scope)
-
 	machinePoolScope.Info("checking for existing launch template")
 	launchTemplate, err := ec2svc.GetLaunchTemplate(machinePoolScope.AWSMachinePool.Status.LaunchTemplateID)
 	if err != nil {
@@ -413,7 +412,7 @@ func (r *AWSMachinePoolReconciler) reconcileLaunchTemplate(machinePoolScope *sco
 		return machinePoolScope.PatchObject()
 	}
 
-	annotation, err := r.machinePoolAnnotationJSON(machinePoolScope.AWSMachinePool, TagsLastAppliedAnnotation)
+	annotation, err := machinePoolAnnotationJSON(machinePoolScope.AWSMachinePool, TagsLastAppliedAnnotation)
 	if err != nil {
 		return err
 	}
@@ -430,7 +429,6 @@ func (r *AWSMachinePoolReconciler) reconcileLaunchTemplate(machinePoolScope *sco
 	// because only 1 instance refresh can be "InProgress". If template is updated when refresh cannot be started,
 	// that change will not trigger a refresh.
 	if needsUpdate || tagsChanged || *imageID != *launchTemplate.AMI.ID {
-		asgSvc := r.getASGService(ec2Scope)
 		canStart, err := asgSvc.CanStartASGInstanceRefresh(machinePoolScope)
 		if err != nil {
 			return err
@@ -450,7 +448,6 @@ func (r *AWSMachinePoolReconciler) reconcileLaunchTemplate(machinePoolScope *sco
 		}
 		machinePoolScope.Info("starting instance refresh", "number of instances", machinePoolScope.MachinePool.Spec.Replicas)
 
-		asgSvc := r.getASGService(ec2Scope)
 		// After creating a new version of launch template, instance refresh is required
 		// to trigger a rolling replacement of all previously launched instances.
 

@@ -67,7 +67,7 @@ func (mr *MockEC2MachineInterfaceMockRecorder) CreateInstance(arg0, arg1 interfa
 }
 
 // CreateLaunchTemplate mocks base method
-func (m *MockEC2MachineInterface) CreateLaunchTemplate(arg0 *scope.MachinePoolScope, arg1 *string, arg2 []byte) (string, error) {
+func (m *MockEC2MachineInterface) CreateLaunchTemplate(arg0 scope.LaunchTemplateOwner, arg1 *string, arg2 []byte) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateLaunchTemplate", arg0, arg1, arg2)
 	ret0, _ := ret[0].(string)
@@ -82,7 +82,7 @@ func (mr *MockEC2MachineInterfaceMockRecorder) CreateLaunchTemplate(arg0, arg1, 
 }
 
 // CreateLaunchTemplateVersion mocks base method
-func (m *MockEC2MachineInterface) CreateLaunchTemplateVersion(arg0 *scope.MachinePoolScope, arg1 *string, arg2 []byte) error {
+func (m *MockEC2MachineInterface) CreateLaunchTemplateVersion(arg0 scope.LaunchTemplateOwner, arg1 *string, arg2 []byte) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateLaunchTemplateVersion", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -214,7 +214,7 @@ func (mr *MockEC2MachineInterfaceMockRecorder) InstanceIfExists(arg0 interface{}
 }
 
 // LaunchTemplateNeedsUpdate mocks base method
-func (m *MockEC2MachineInterface) LaunchTemplateNeedsUpdate(arg0 *scope.MachinePoolScope, arg1, arg2 *v1alpha30.AWSLaunchTemplate) (bool, error) {
+func (m *MockEC2MachineInterface) LaunchTemplateNeedsUpdate(arg0 scope.LaunchTemplateOwner, arg1, arg2 *v1alpha30.AWSLaunchTemplate) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LaunchTemplateNeedsUpdate", arg0, arg1, arg2)
 	ret0, _ := ret[0].(bool)

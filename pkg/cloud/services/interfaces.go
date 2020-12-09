@@ -60,10 +60,10 @@ type EC2MachineInterface interface {
 
 	DiscoverLaunchTemplateAMI(scope *scope.MachinePoolScope) (*string, error)
 	GetLaunchTemplate(id string) (*expinfrav1.AWSLaunchTemplate, error)
-	CreateLaunchTemplate(scope *scope.MachinePoolScope, imageID *string, userData []byte) (string, error)
-	CreateLaunchTemplateVersion(scope *scope.MachinePoolScope, imageID *string, userData []byte) error
+	CreateLaunchTemplate(scope scope.LaunchTemplateOwner, imageID *string, userData []byte) (string, error)
+	CreateLaunchTemplateVersion(scope scope.LaunchTemplateOwner, imageID *string, userData []byte) error
 	DeleteLaunchTemplate(id string) error
-	LaunchTemplateNeedsUpdate(scope *scope.MachinePoolScope, incoming *expinfrav1.AWSLaunchTemplate, existing *expinfrav1.AWSLaunchTemplate) (bool, error)
+	LaunchTemplateNeedsUpdate(scope scope.LaunchTemplateOwner, incoming *expinfrav1.AWSLaunchTemplate, existing *expinfrav1.AWSLaunchTemplate) (bool, error)
 }
 
 // SecretInterface encapsulated the methods exposed to the

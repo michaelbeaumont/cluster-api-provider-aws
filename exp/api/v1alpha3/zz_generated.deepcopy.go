@@ -424,6 +424,11 @@ func (in *AWSManagedMachinePoolSpec) DeepCopyInto(out *AWSManagedMachinePoolSpec
 		*out = new(ManagedMachineAMIType)
 		**out = **in
 	}
+	if in.LaunchTemplate != nil {
+		in, out := &in.LaunchTemplate, &out.LaunchTemplate
+		*out = new(AWSLaunchTemplate)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Labels != nil {
 		in, out := &in.Labels, &out.Labels
 		*out = make(map[string]string, len(*in))

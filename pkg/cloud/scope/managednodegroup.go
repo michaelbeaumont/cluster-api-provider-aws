@@ -20,6 +20,7 @@ import (
 	"context"
 
 	awsclient "github.com/aws/aws-sdk-go/aws/client"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	"k8s.io/klog/klogr"
@@ -108,6 +109,11 @@ type ManagedMachinePoolScope struct {
 	enableIAM bool
 }
 
+// Name returns the managed machine pool name.
+func (s *ManagedMachinePoolScope) Name() string {
+	return s.ManagedMachinePool.Name
+}
+
 // ManagedPoolName returns the managed machine pool name.
 func (s *ManagedMachinePoolScope) ManagedPoolName() string {
 	return s.ManagedMachinePool.Name
@@ -129,6 +135,25 @@ func (s *ManagedMachinePoolScope) ClusterName() string {
 // EnableIAM indicates that reconciliation should create IAM roles
 func (s *ManagedMachinePoolScope) EnableIAM() bool {
 	return s.enableIAM
+}
+
+func (m *ManagedMachinePoolScope) CoreSecurityGroups(scope EC2Scope) ([]string, error) {
+	return []string{}, nil
+}
+
+func (m *ManagedMachinePoolScope) LaunchTemplateSpec() *infrav1exp.AWSLaunchTemplate {
+	return m.ManagedMachinePool.Spec.LaunchTemplate
+}
+
+func (m *ManagedMachinePoolScope) StatusLaunchTemplateID() string {
+	if lt := m.ManagedMachinePool.Spec.LaunchTemplate; lt != nil {
+		return aws.StringValue(lt.AMI.ID)
+	}
+	return ""
+}
+
+func (m *ManagedMachinePoolScope) OwnerObject() conditions.Setter {
+	return m.ManagedMachinePool
 }
 
 // AdditionalTags returns AdditionalTags from the scope's ManagedMachinePool
